@@ -1,0 +1,77 @@
+# Node.js with Angular
+# Build a Node.js project that uses Angular.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+
+trigger:
+- master
+
+pool:
+  vmImage: 'macOS-latest'
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '10.x'
+  displayName: 'Install Node.js'
+
+- task: SonarCloudPrepare@1
+  inputs:
+    SonarCloud: 'Ricky Sonar Cloud'
+    organization: 'ricky-acn'
+    scannerMode: 'CLI'
+    configMode: 'manual'
+    cliProjectKey: 'ionic'
+    cliProjectName: 'ionic'
+    cliSources: 'src'
+    extraProperties: |
+      # Additional properties that will be passed to the scanner, 
+      # Put one key=value per line, example:
+      # sonar.exclusions=**/*.bin
+      sonar.sources=src
+      sonar.exclusions=**/node_modules/**,**/*.spec.ts
+      sonar.tests=src
+      sonar.test.inclusions=**/*.spec.ts
+      sonar.ts.tslintconfigpath=tslint.json
+      sonar.typescript.lcov.reportPaths=coverage/lcov.info
+
+- task: IonicCommand@1
+  inputs:
+    ionicCommand: 'cordova build android'
+  displayName: 'ionic build android'
+
+- task: IonicCommand@1
+  inputs:
+    ionicCommand: 'cordova build ios'
+  displayName: 'ionic build ios'
+
+- task: Npm@1
+  inputs:
+    command: 'custom'
+    customCommand: 'run test-coverage'
+  displayName: 'npm run test-coverage'
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+    includeRootFolder: true
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    replaceExistingArchive: true
+
+- task: SonarCloudAnalyze@1
+
+- task: SonarCloudPublish@1
+  inputs:
+    pollingTimeoutSec: '300'
+
+- task: PublishTestResults@2
+  inputs:
+    testResultsFormat: 'JUnit'
+    testResultsFiles: '**/TESTS-*.xml'
+    mergeTestResults: true
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'

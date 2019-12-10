@@ -1,0 +1,96 @@
+# ASP.NET Core
+# Build and test ASP.NET Core projects targeting .NET Core.
+# Add steps that run tests, create a NuGet package, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-2019'
+
+variables:
+  buildConfiguration: 'Release'
+
+steps:
+
+- task: SonarCloudPrepare@1
+  inputs:
+    SonarCloud: 'Ricky Sonar Cloud'
+    organization: 'ricky-acn'
+    scannerMode: 'MSBuild'
+    projectKey: 'dotnet-core'
+    projectName: 'dotnet-core'
+    extraProperties: |
+      sonar.exclusions=**/obj/**,**/*.dll
+      sonar.cs.opencover.reportsPaths=$(Build.SourcesDirectory)/**/coverage.opencover.xml
+      sonar.cs.vstest.reportsPaths=$(Agent.TempDirectory)/*.trx
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'restore'
+    feedsToUse: 'select'
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet build'
+  inputs:
+    command: 'build'
+    arguments: '--configuration $(BuildConfiguration)'
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet test'
+  inputs:
+    command: 'test'
+    arguments: '--configuration $(BuildConfiguration) /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --logger trx'
+    testRunTitle: 'dotnet test'
+
+# - script: |
+#     dotnet tool install -g dotnet-reportgenerator-globaltool
+#     reportgenerator "-reports:$(Build.SourcesDirectory)\**\coverage.opencover.xml" "-targetdir:$(Build.SourcesDirectory)\CodeCoverage" "-reporttypes:HtmlInline_AzurePipelines;Cobertura"
+#   displayName: Create Code Coverage Report
+
+# - task: PublishCodeCoverageResults@1
+#   inputs:
+#     codeCoverageTool: 'Cobertura'
+#     summaryFileLocation: '$(Build.SourcesDirectory)\CodeCoverage\Cobertura.xml'
+#     reportDirectory: '$(Build.SourcesDirectory)\CodeCoverage'
+
+- task: SonarCloudAnalyze@1
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet publish'
+  inputs:
+    command: 'publish'
+    publishWebProjects: false
+    arguments: '--output $(Build.ArtifactStagingDirectory)'
+    zipAfterPublish: false
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
+
+- task: SonarCloudPublish@1
+  inputs:
+    pollingTimeoutSec: '300'
+
+# - task: VisualStudioTestPlatformInstaller@1
+#   inputs:
+#     packageFeedSelector: 'nugetOrg'
+#     versionSelector: 'latestPreRelease'
+# - task: VSTest@2
+#   inputs:
+#     testSelector: 'testAssemblies'
+#     testAssemblyVer2: |
+#       **\*test*.dll
+#       !**\*TestAdapter.dll
+#       !**\obj\**
+#     searchFolder: '$(System.DefaultWorkingDirectory)'
+#     otherConsoleOptions: '/Logger:trx'
+
+
+# - task: PublishTestResults@2
+#   inputs:
+#     testrunner: 'VSTest'
+#     testResultsFiles: '**/TEST-*.trx'

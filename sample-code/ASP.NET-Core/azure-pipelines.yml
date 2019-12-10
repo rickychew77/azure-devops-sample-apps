@@ -1,0 +1,57 @@
+# ASP.NET Core
+# Build and test ASP.NET Core projects targeting .NET Core.
+# Add steps that run tests, create a NuGet package, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-2019'
+
+variables:
+  buildConfiguration: 'Release'
+
+steps:
+- task: SonarCloudPrepare@1
+  inputs:
+    SonarCloud: 'Ricky Sonar Cloud'
+    organization: 'ricky-acn'
+    scannerMode: 'MSBuild'
+    projectKey: 'aspdotnet-core'
+    projectName: 'aspdotnet-core'
+    extraProperties: |
+      sonar.inclusions=**/Controllers/HomeController.cs
+      sonar.test.inclusions=asp-dotnetcore-nunit/UnitTest1.cs
+      sonar.cs.opencover.reportsPaths=$(Build.SourcesDirectory)/**/coverage.opencover.xml
+      sonar.cs.vstest.reportsPaths=$(Agent.TempDirectory)/*.trx
+
+- task: DotNetCoreCLI@2
+  displayName: "dotnet build"
+  inputs:
+    command: 'build'
+    arguments: '--configuration $(buildConfiguration)'
+
+- task: DotNetCoreCLI@2
+  displayName: "dotnet test"
+  inputs:
+    command: 'test'
+    arguments: '--configuration $(BuildConfiguration) /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --logger trx'
+
+- task: SonarCloudAnalyze@1
+
+- task: SonarCloudPublish@1
+  inputs:
+    pollingTimeoutSec: '300'
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet publish'
+  inputs:
+    command: 'publish'
+    publishWebProjects: true
+    arguments: '--output $(Build.ArtifactStagingDirectory)'
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'

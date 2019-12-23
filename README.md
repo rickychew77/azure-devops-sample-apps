@@ -8,7 +8,7 @@ This repo contains sample application source code of various platforms, where ea
 |.NET Core|[NUnit](https://nunit.org/)|[./dotnetcore-nunit/PrimeService.Tests/UnitTest1.cs](./dotnetcore-nunit/PrimeService.Tests/UnitTest1.cs)|
 |.NET Core|[xUnit](https://xunit.net/)|[./dotnetcore-xunit/PrimeService.Tests/PrimeService_IsPrimeShould.cs](./dotnetcore-xunit/PrimeService.Tests/PrimeService_IsPrimeShould.cs)|
 |<span>ASP.</span>NET Core|[NUnit](https://nunit.org/)|[./asp-dotnetcore/asp-dotnetcore-nunit/UnitTest1.cs](./asp-dotnetcore/asp-dotnetcore-nunit/UnitTest1.cs)|
-|Ionic|[Karma](https://karma-runner.github.io/latest/index.html) (test runner) and [Jasmine](https://jasmine.github.io/) (library)|[./ionic/src/app/tab1/tab1.page.spec.ts](./ionic/src/app/tab1/tab1.page.spec.ts)|
+|Ionic|[Karma](https://karma-runner.github.io/latest/index.html) (test runner) and [Jasmine](https://jasmine.github.io/) (library)|[./ionic/src/app/tab1/tab1.page.spec.ts](./ionic/src/app/tab1/tab1.page.spec.ts) and other spec files|
 |Node.js|[Mocha](https://mochajs.org/) (test runner) and [Chai](https://www.chaijs.com/) (library)|[./nodejs/test/test.js](./nodejs/test/test.js)|
 
 ## Other References
